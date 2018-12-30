@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">My Application</string>
+    <string name="message">Watch face tapped</string>
+    <string name="my_digital_name">My Digital</string>
+    <string name="time_format">%02d:%02d</string>
+    <string name="day_format">%02d</string>
+</resources>
