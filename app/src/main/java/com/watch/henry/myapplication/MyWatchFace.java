@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -15,14 +16,23 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.RelativeSizeSpan;
+import android.text.style.StyleSpan;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 
 import java.lang.ref.WeakReference;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
@@ -52,6 +62,8 @@ public class MyWatchFace extends CanvasWatchFaceService {
      * Handler message id for updating the time periodically in interactive mode.
      */
     private static final int MSG_UPDATE_TIME = 0;
+
+    private static String CURR_DATE = "curr_date";
 
     @Override
     public Engine onCreateEngine() {
@@ -120,6 +132,11 @@ public class MyWatchFace extends CanvasWatchFaceService {
         private String dayStr;
         private String weekStr;
 
+        private SharedPreferences sharedPreferences;
+        private SharedPreferences.Editor editor;
+        private String currDate;
+        private SimpleDateFormat simpleDateFormat;
+
         @Override
         public void onCreate(SurfaceHolder holder) {
             super.onCreate(holder);
@@ -157,6 +174,11 @@ public class MyWatchFace extends CanvasWatchFaceService {
             mDatePaint.setAntiAlias(true);
             mDatePaint.setColor(
                     ContextCompat.getColor(getApplicationContext(), R.color.digital_date_text));
+
+            sharedPreferences = getSharedPreferences(getString(R.string.app_name), Context.MODE_PRIVATE);
+            editor = sharedPreferences.edit();
+
+            simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         }
 
         @Override
@@ -316,7 +338,54 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
             hourText = String.format(getResources().getString(R.string.time_format), mCalendar.get(Calendar.HOUR_OF_DAY),
                     mCalendar.get(Calendar.MINUTE));
+
+            if (!isShow()) {
+                showNotification(MyWatchFace.this);
+            }
+
             canvas.drawText(hourText, mTimeXOffset, mTimeYOffset, mTimePaint);
+        }
+
+        private boolean isShow() {
+            currDate = sharedPreferences.getString(CURR_DATE, "");
+
+            if (simpleDateFormat.format(new Date()).equals(currDate)) {
+                return true;
+            } else {
+                editor.putString(CURR_DATE, simpleDateFormat.format(new Date()));
+                editor.apply();
+                return false;
+            }
+        }
+
+        private void showNotification(Context context) {
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
+                    .setSmallIcon(R.mipmap.vivid_icon)
+                    .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.mipmap.header))
+                    .setContentTitle(getNotificationContent(context));
+
+            NotificationManagerCompat.from(context).notify(0, builder.build());
+        }
+
+        private SpannableString getNotificationContent(Context context) {
+            String day = Utils.getDays();
+            String days = day + " days";
+
+            SpannableString spannableString = new SpannableString(days);
+
+            ForegroundColorSpan foregroundColorSpanOrange = new ForegroundColorSpan(context.getResources().getColor(R.color.orange));
+            spannableString.setSpan(foregroundColorSpanOrange, 0, day.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+
+            RelativeSizeSpan relativeSizeSpan = new RelativeSizeSpan(1.2f);
+            spannableString.setSpan(relativeSizeSpan, 0, day.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+
+            ForegroundColorSpan foregroundColorSpanGray = new ForegroundColorSpan(context.getResources().getColor(android.R.color.darker_gray));
+            spannableString.setSpan(foregroundColorSpanGray, day.length(), days.length(), Spanned.SPAN_EXCLUSIVE_INCLUSIVE);
+
+            StyleSpan styleSpan = new StyleSpan(Typeface.ITALIC);
+            spannableString.setSpan(styleSpan, 0, days.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+
+            return spannableString;
         }
 
         /**
