@@ -1,8 +1,5 @@
 package com.watch.henry.myapplication;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -21,13 +18,15 @@ public class Utils {
     private static int getDays(String date) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
 
-        Date startDate = null;
-        Date currDate = null;
+        Date startDate;
+        Date currDate;
         try {
             startDate = dateFormat.parse(date);
             currDate = dateFormat.parse(dateFormat.format(new Date()));
         } catch (ParseException e) {
             e.printStackTrace();
+            startDate = null;
+            currDate = null;
         }
 
         if (startDate != null && currDate != null) {
