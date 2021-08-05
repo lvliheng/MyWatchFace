@@ -107,13 +107,9 @@ public class MyWatchFace extends CanvasWatchFaceService {
         private float mTimeYOffset;
         private float mDateYOffset;
 
-        private float mDayXOffset;
-        private float mDayYOffset;
-
         private Paint mBackgroundPaint;
         private Paint mTimePaint;
         private Paint mDatePaint;
-        private Paint mDayPaint;
         /**
          * Whether the display supports fewer bits for each color in ambient mode. When true, we
          * disable anti-aliasing in ambient mode.
@@ -158,7 +154,6 @@ public class MyWatchFace extends CanvasWatchFaceService {
             Resources resources = MyWatchFace.this.getResources();
             mTimeYOffset = resources.getDimension(R.dimen.digital_time_y_offset);
             mDateYOffset = resources.getDimension(R.dimen.digital_date_y_offset);
-            mDayYOffset = resources.getDimension(R.dimen.digital_day_y_offset);
 
             mBackgroundBitmap = BitmapFactory.decodeResource(resources, R.drawable.custom_background);
 
@@ -178,16 +173,8 @@ public class MyWatchFace extends CanvasWatchFaceService {
             mDatePaint = new Paint();
             mDatePaint.setTypeface(NORMAL_TYPEFACE);
             mDatePaint.setAntiAlias(true);
-//            mDatePaint.setColor(
-//                    ContextCompat.getColor(getApplicationContext(), R.color.digital_date_text));
             mDatePaint.setColor(
-                    ContextCompat.getColor(getApplicationContext(), android.R.color.white));
-
-            mDayPaint = new Paint();
-            mDayPaint.setTypeface(NORMAL_TYPEFACE);
-            mDayPaint.setAntiAlias(true);
-            mDayPaint.setColor(
-                    ContextCompat.getColor(getApplicationContext(), android.R.color.white));
+                    ContextCompat.getColor(getApplicationContext(), R.color.digital_date_text));
 
             sharedPreferences = getSharedPreferences(getString(R.string.app_name), Context.MODE_PRIVATE);
             editor = sharedPreferences.edit();
@@ -270,19 +257,13 @@ public class MyWatchFace extends CanvasWatchFaceService {
                     ? R.dimen.digital_time_x_offset_round : R.dimen.digital_time_x_offset);
             mDateXOffset = resources.getDimension(isRound
                     ? R.dimen.digital_date_x_offset_round : R.dimen.digital_date_x_offset);
-            mDayXOffset = resources.getDimension(isRound
-                    ? R.dimen.digital_day_x_offset_round : R.dimen.digital_day_x_offset);
             float timeTextSize = resources.getDimension(isRound
                     ? R.dimen.digital_time_text_size_round : R.dimen.digital_time_text_size);
             float dateTextSize = resources.getDimension(isRound
                     ? R.dimen.digital_date_text_size_round : R.dimen.digital_date_text_size);
 
-            float dayTextSize = resources.getDimension(isRound
-                    ? R.dimen.digital_day_text_size_round : R.dimen.digital_day_text_size);
-
             mTimePaint.setTextSize(timeTextSize);
             mDatePaint.setTextSize(dateTextSize);
-            mDayPaint.setTextSize(dayTextSize);
         }
 
         @Override
@@ -346,28 +327,22 @@ public class MyWatchFace extends CanvasWatchFaceService {
                 mTimePaint.setColor(
                         ContextCompat.getColor(getApplicationContext(), android.R.color.white));
             } else {
-//                canvas.drawBitmap(mBackgroundBitmap, 0, 0, mTimePaint);
-//                mTimePaint.setColor(
-//                        ContextCompat.getColor(getApplicationContext(), R.color.digital_time_text));
-
-                canvas.drawColor(Color.BLACK);
+                canvas.drawBitmap(mBackgroundBitmap, 0, 0, mTimePaint);
                 mTimePaint.setColor(
-                        ContextCompat.getColor(getApplicationContext(), android.R.color.white));
+                        ContextCompat.getColor(getApplicationContext(), R.color.digital_time_text));
 
                 monthStr = mCalendar.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault());
                 dayStr = String.format(getResources().getString(R.string.day_format), mCalendar.get(Calendar.DAY_OF_MONTH));
                 weekStr = mCalendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT, Locale.getDefault());
                 canvas.drawText(weekStr + ", " + monthStr + " " + dayStr, mDateXOffset, mDateYOffset, mDatePaint);
-
-                canvas.drawText(Utils.getDays(), mDayXOffset, mDayYOffset, mDayPaint);
             }
 
             hourText = String.format(getResources().getString(R.string.time_format), mCalendar.get(Calendar.HOUR_OF_DAY),
                     mCalendar.get(Calendar.MINUTE));
 
-//            if (!isShow()) {
-//                showNotification(MyWatchFace.this);
-//            }
+            if (!isShow()) {
+                showNotification(MyWatchFace.this);
+            }
 
             canvas.drawText(hourText, mTimeXOffset, mTimeYOffset, mTimePaint);
         }
